@@ -1,31 +1,32 @@
+import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import ViewNotes from "./pages/ViewNotes";
 import AddNote from "./pages/AddNote";
 import EditNote from "./pages/EditNote";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 
-function App() {
+const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Home */}
+        {/* HOME */}
         <Route path="/" element={<ViewNotes />} />
 
-        {/* Login */}
+        {/* AUTH */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-        {/* Add Note (protected on page level) */}
+        {/* NOTES (NO ROUTE GUARDS) */}
         <Route path="/add" element={<AddNote />} />
-
-        {/* Edit Note (protected on page level) */}
         <Route path="/edit/:id" element={<EditNote />} />
 
-        {/* Catch-all */}
+        {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
-}
+};
 
 export default App;

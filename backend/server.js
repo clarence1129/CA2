@@ -8,52 +8,75 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
-/* =========================
-   JWT CONFIG
-   ========================= */
 const JWT_SECRET = "dev_secret_change_me";
 
 /* =========================
-   DEMO USER (as per guide)
+   USERS (IN MEMORY)
    ========================= */
-const DEMO_USER = {
-  id: 1,
-  username: "Team8",
-  password: "Team8password"
-};
+let users = [];
 
 /* =========================
-   DATA
+   NOTES
    ========================= */
-let notes = [
-  {
-    id: 1,
-    module: "C219",
-    title: "React Basics",
-    content: "Components and props"
+let notes = [];
+
+/* =========================
+   REGISTER
+   ========================= */
+app.post("/register", (req, res) => {
+  try {
+    let { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
+
+    username = username.trim().toLowerCase();
+
+    const exists = users.find(u => u.username === username);
+    if (exists) {
+      return res.status(409).json({ error: "User already exists" });
+    }
+
+    users.push({
+      id: Date.now(),
+      username,
+      password
+    });
+
+    return res.status(201).json({ message: "Registered successfully" });
+  } catch (err) {
+    return res.status(500).json({ error: "Register failed" });
   }
-];
+});
 
 /* =========================
-   LOGIN (JWT)
+   LOGIN
    ========================= */
 app.post("/login", (req, res) => {
-  const { username, password } = req.body;
+  try {
+    let { username, password } = req.body;
 
-  if (
-    username !== DEMO_USER.username ||
-    password !== DEMO_USER.password
-  ) {
-    return res.status(401).json({ error: "Invalid credentials" });
+    username = username.trim().toLowerCase();
+
+    const user = users.find(
+      u => u.username === username && u.password === password
+    );
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    return res.json({ token });
+  } catch {
+    return res.status(500).json({ error: "Login failed" });
   }
-
-  const token = jwt.sign(
-    { userId: DEMO_USER.id, username: DEMO_USER.username },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  res.json({ token });
 });
 
 /* =========================
@@ -61,72 +84,56 @@ app.post("/login", (req, res) => {
    ========================= */
 function requireAuth(req, res, next) {
   const header = req.headers.authorization;
-
-  if (!header) {
-    return res.status(401).json({ error: "Missing Authorization header" });
-  }
+  if (!header) return res.status(401).json({ error: "No token" });
 
   const [type, token] = header.split(" ");
-
-  if (type !== "Bearer" || !token) {
-    return res.status(401).json({ error: "Invalid Authorization format" });
-  }
+  if (type !== "Bearer") return res.status(401).json({ error: "Bad token" });
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    req.user = payload;
+    req.user = jwt.verify(token, JWT_SECRET);
     next();
   } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({ error: "Invalid token" });
   }
 }
 
 /* =========================
-   NOTES ROUTES
+   NOTES
    ========================= */
-
-// PUBLIC – view notes
 app.get("/notes", (req, res) => {
   res.json(notes);
 });
 
-// PROTECTED – add
 app.post("/notes", requireAuth, (req, res) => {
   const { module, title, content } = req.body;
 
-  const newNote = {
-    id: notes.length + 1,
+  notes.push({
+    id: Date.now(),
     module,
     title,
     content
-  };
+  });
 
-  notes.push(newNote);
-  res.json(newNote);
+  res.json({ message: "Note added" });
 });
 
-// PROTECTED – update
 app.put("/notes/:id", requireAuth, (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = Number(req.params.id);
   const { module, title, content } = req.body;
 
-  notes = notes.map(note =>
-    note.id === id ? { ...note, module, title, content } : note
+  notes = notes.map(n =>
+    n.id === id ? { ...n, module, title, content } : n
   );
 
-  res.json({ message: "Note updated" });
+  res.json({ message: "Updated" });
 });
 
-// PROTECTED – delete
 app.delete("/notes/:id", requireAuth, (req, res) => {
-  const id = parseInt(req.params.id);
-  notes = notes.filter(note => note.id !== id);
-  res.json({ message: "Note deleted" });
+  const id = Number(req.params.id);
+  notes = notes.filter(n => n.id !== id);
+  res.json({ message: "Deleted" });
 });
 
-/* =========================
-   START SERVER
-   ========================= */
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
