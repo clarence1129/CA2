@@ -19,7 +19,11 @@ const Register = () => {
       return;
     }
 
-    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password) || password.length < 8) {
+    if (
+      !/[A-Z]/.test(password) ||
+      !/[0-9]/.test(password) ||
+      password.length < 8
+    ) {
       setError("Password must be 8+ chars, 1 capital, 1 number.");
       return;
     }
@@ -34,7 +38,7 @@ const Register = () => {
       const data = await res.json();
 
       if (res.status === 201) {
-        setSuccess("Account created. Please login.");
+        setSuccess("Account created. Redirecting to login…");
         setTimeout(() => navigate("/login"), 1000);
         return;
       }
@@ -51,25 +55,52 @@ const Register = () => {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #020617, #0f172a, #1e293b)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      fontFamily: "'Nunito', sans-serif"
-    }}>
-      <form onSubmit={register} style={{
-        width: "440px",
-        background: "rgba(255,255,255,0.12)",
-        padding: "44px",
-        borderRadius: "32px",
-        color: "white"
-      }}>
-        <h2 style={{ fontFamily: "'Poppins', sans-serif" }}>Register</h2>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #020617, #0f172a, #1e293b)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "'Nunito', sans-serif",
+        padding: "20px"
+      }}
+    >
+      <form
+        onSubmit={register}
+        style={{
+          width: "100%",
+          maxWidth: "520px",          // 🔥 STRETCH LIMIT
+          background: "rgba(255,255,255,0.12)",
+          backdropFilter: "blur(14px)",
+          padding: "48px",
+          borderRadius: "32px",
+          color: "white",
+          boxSizing: "border-box",
+          boxShadow: "0 24px 50px rgba(0,0,0,0.45)"
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: "28px",
+            fontWeight: 700,
+            marginBottom: "28px"
+          }}
+        >
+          Register
+        </h2>
 
-        {error && <p style={{ color: "#fca5a5" }}>{error}</p>}
-        {success && <p style={{ color: "#86efac" }}>{success}</p>}
+        {error && (
+          <p style={{ color: "#fca5a5", marginBottom: "16px" }}>
+            {error}
+          </p>
+        )}
+        {success && (
+          <p style={{ color: "#86efac", marginBottom: "16px" }}>
+            {success}
+          </p>
+        )}
 
         <input
           placeholder="Username"
@@ -86,7 +117,9 @@ const Register = () => {
           style={inputStyle}
         />
 
-        <button style={primaryBtn}>Create Account</button>
+        <button style={primaryBtn}>
+          Create Account
+        </button>
       </form>
     </div>
   );
@@ -94,21 +127,28 @@ const Register = () => {
 
 const inputStyle = {
   width: "100%",
-  height: "52px",
-  marginBottom: "18px",
+  height: "54px",
+  marginBottom: "20px",
   borderRadius: "999px",
   border: "none",
-  padding: "0 18px"
+  padding: "0 20px",
+  fontSize: "15px",
+  outline: "none",
+  boxSizing: "border-box",
+  fontFamily: "'Nunito', sans-serif"
 };
 
 const primaryBtn = {
   width: "100%",
-  height: "52px",
+  height: "54px",
   borderRadius: "999px",
   border: "none",
   background: "#2563eb",
   color: "white",
-  fontWeight: 600
+  fontWeight: 600,
+  fontSize: "15px",
+  cursor: "pointer",
+  fontFamily: "'Poppins', sans-serif"
 };
 
 export default Register;

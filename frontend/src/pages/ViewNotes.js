@@ -5,13 +5,30 @@ const ViewNotes = () => {
   const [notes, setNotes] = useState([]);
   const navigate = useNavigate();
 
-  const isLoggedIn = !!localStorage.getItem("token");
+  const token = localStorage.getItem("token");
+  const isLoggedIn = !!token;
 
   useEffect(() => {
-    fetch("http://localhost:5000/notes")
+    if (!token) {
+      setNotes([]);
+      return;
+    }
+
+    fetch("http://localhost:5000/notes", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    })
       .then(res => res.json())
-      .then(data => setNotes(data));
-  }, []);
+      .then(data => {
+        if (Array.isArray(data)) {
+          setNotes(data);
+        } else {
+          setNotes([]);
+        }
+      })
+      .catch(() => setNotes([]));
+  }, [token]);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -27,12 +44,12 @@ const ViewNotes = () => {
     fetch("http://localhost:5000/notes/" + id, {
       method: "DELETE",
       headers: {
-        Authorization: "Bearer " + localStorage.getItem("token")
+        Authorization: "Bearer " + token
       }
     })
       .then(res => {
         if (!res.ok) throw new Error();
-        setNotes(notes.filter(note => note.id !== id));
+        setNotes(prev => prev.filter(note => note.id !== id));
       })
       .catch(() => {
         alert("Delete failed.");
@@ -108,78 +125,112 @@ const ViewNotes = () => {
           </p>
         )}
 
-        {notes.map(note => (
-          <div
-            key={note.id}
-            style={{
-              position: "relative",
-              background: "rgba(255,255,255,0.12)",
-              padding: "28px",
-              borderRadius: "28px",
-              marginBottom: "24px",
-              color: "white"
-            }}
-          >
-            {isLoggedIn && (
-              <button
-                onClick={() => deleteNote(note.id, note.title)}
+        {Array.isArray(notes) &&
+          notes.map(note => (
+            <div
+              key={note.id}
+              style={{
+                position: "relative",
+                background: "rgba(255,255,255,0.12)",
+                padding: "28px",
+                borderRadius: "28px",
+                marginBottom: "24px",
+                color: "white"
+              }}
+            >
+              {isLoggedIn && (
+                <button
+                  onClick={() => deleteNote(note.id, note.title)}
+                  style={{
+                    position: "absolute",
+                    top: "18px",
+                    right: "18px",
+                    background: "transparent",
+                    border: "none",
+                    color: "#fca5a5",
+                    fontFamily: "'Poppins', sans-serif",
+                    cursor: "pointer"
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+
+              <span
                 style={{
-                  position: "absolute",
-                  top: "18px",
-                  right: "18px",
-                  background: "transparent",
-                  border: "none",
-                  color: "#fca5a5",
-                  fontFamily: "'Poppins', sans-serif",
-                  cursor: "pointer"
+                  fontSize: "14px",
+                  padding: "8px 16px",
+                  background: "rgba(255,255,255,0.25)",
+                  borderRadius: "999px",
+                  display: "inline-block",
+                  marginBottom: "14px",
+                  fontFamily: "'Poppins', sans-serif"
                 }}
               >
-                Delete
-              </button>
-            )}
+                {note.module}
+              </span>
 
-            <span
-              style={{
-                fontSize: "14px",
-                padding: "8px 16px",
-                background: "rgba(255,255,255,0.25)",
-                borderRadius: "999px",
-                display: "inline-block",
-                marginBottom: "14px",
-                fontFamily: "'Poppins', sans-serif"
-              }}
-            >
-              {note.module}
-            </span>
-
-            <h3
-              style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: "20px",
-                marginBottom: "6px"
-              }}
-            >
-              {note.title}
-            </h3>
-
-            <p>{note.content}</p>
-
-            {isLoggedIn && (
-              <button
-                onClick={() => navigate(`/edit/${note.id}`)}
-                style={secondaryBtn}
+              <h3
+                style={{
+                  fontFamily: "'Poppins', sans-serif",
+                  fontSize: "20px",
+                  marginBottom: "6px"
+                }}
               >
-                Edit
-              </button>
-            )}
-          </div>
-        ))}
+                {note.title}
+              </h3>
+
+              <p>{note.content}</p>
+
+              {/* 📎 FILE / IMAGE DISPLAY */}
+              {note.file_url && (
+                <>
+                  {note.file_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                    <img
+                      src={"http://localhost:5000" + note.file_url}
+                      alt="Attachment"
+                      style={{
+                        width: "100%",
+                        maxHeight: "260px",
+                        objectFit: "cover",
+                        borderRadius: "18px",
+                        marginTop: "14px"
+                      }}
+                    />
+                  ) : (
+                    <a
+                      href={"http://localhost:5000" + note.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: "inline-block",
+                        marginTop: "14px",
+                        color: "#93c5fd",
+                        textDecoration: "underline"
+                      }}
+                    >
+                      📎 View / Download Attachment
+                    </a>
+                  )}
+                </>
+              )}
+
+              {isLoggedIn && (
+                <button
+                  onClick={() => navigate(`/edit/${note.id}`)}
+                  style={{ ...secondaryBtn, marginTop: "16px" }}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+          ))}
       </div>
     </div>
   );
 };
 
-/* BUTTON STYLES (ALIGNED) */
+/* BUTTON STYLES */
 const primaryBtn = {
   height: "44px",
   padding: "0 22px",

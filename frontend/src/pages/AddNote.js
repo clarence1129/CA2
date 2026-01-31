@@ -5,35 +5,46 @@ const AddNote = () => {
   const [title, setTitle] = useState("");
   const [module, setModule] = useState("");
   const [content, setContent] = useState("");
+  const [file, setFile] = useState(null);
 
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  // 🔒 AUTH GUARD
+  if (!token) {
+    navigate("/login");
+    return null;
+  }
 
   const submitNote = (e) => {
     e.preventDefault();
 
+    const formData = new FormData();
+    formData.append("module", module);
+    formData.append("title", title);
+    formData.append("content", content);
+
+    if (file) {
+      formData.append("file", file); // 👈 image / pdf / any file
+    }
+
     fetch("http://localhost:5000/notes", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
+        Authorization: "Bearer " + token
+        // ❌ DO NOT set Content-Type for FormData
       },
-      body: JSON.stringify({
-        module: module,
-        title: title,
-        content: content
-      })
+      body: formData
     })
       .then(res => {
-        if (!res.ok) {
-          throw new Error("Add failed");
-        }
+        if (!res.ok) throw new Error();
         return res.json();
       })
       .then(() => {
         navigate("/");
       })
       .catch(() => {
-        alert("You must be logged in to add notes.");
+        alert("Unable to add note");
       });
   };
 
@@ -51,10 +62,10 @@ const AddNote = () => {
       <form
         onSubmit={submitNote}
         style={{
-          width: "440px",               // ⬅️ same as Edit
+          width: "440px",
           background: "rgba(255,255,255,0.12)",
           backdropFilter: "blur(14px)",
-          padding: "44px",              // ⬅️ same spacing
+          padding: "44px",
           borderRadius: "32px",
           boxShadow: "0 24px 50px rgba(0,0,0,0.45)",
           color: "white",
@@ -93,7 +104,14 @@ const AddNote = () => {
           style={textareaStyle}
         />
 
-        <button style={primaryButtonStyle}>
+        {/* 📎 FILE UPLOAD */}
+        <input
+          type="file"
+          onChange={e => setFile(e.target.files[0])}
+          style={fileInputStyle}
+        />
+
+        <button type="submit" style={primaryButtonStyle}>
           Save Note
         </button>
 
@@ -126,7 +144,7 @@ const textareaStyle = {
   width: "100%",
   height: "120px",
   padding: "16px 18px",
-  marginBottom: "20px",
+  marginBottom: "18px",
   borderRadius: "22px",
   border: "none",
   outline: "none",
@@ -134,6 +152,13 @@ const textareaStyle = {
   fontFamily: "'Nunito', sans-serif",
   fontSize: "15px",
   boxSizing: "border-box"
+};
+
+const fileInputStyle = {
+  width: "100%",
+  marginBottom: "22px",
+  color: "white",
+  fontFamily: "'Nunito', sans-serif"
 };
 
 const primaryButtonStyle = {
