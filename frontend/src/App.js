@@ -1,22 +1,30 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import ViewNotes from "./pages/ViewNotes";
 import AddNote from "./pages/AddNote";
 import EditNote from "./pages/EditNote";
+import Login from "./pages/Login";
 
 function App() {
   return (
-    <Router>
-      <div>
-        <h1>Study Notes Manager</h1>
+    <BrowserRouter>
+      <Routes>
+        {/* Home */}
+        <Route path="/" element={<ViewNotes />} />
 
-        <Routes>
-          <Route path="/" element={<ViewNotes />} />
-          <Route path="/add" element={<AddNote />} />
-          <Route path="/edit/:id" element={<EditNote />} />
-        </Routes>
-      </div>
-    </Router>
+        {/* Login */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Add Note (protected on page level) */}
+        <Route path="/add" element={<AddNote />} />
+
+        {/* Edit Note (protected on page level) */}
+        <Route path="/edit/:id" element={<EditNote />} />
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
